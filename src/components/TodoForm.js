@@ -1,14 +1,22 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const initialFormValues = {
   title: "",
   descripcion: "",
 };
 
-const TodoForm = ({ addTodo }) => {
+const TodoForm = ({ addTodo, todoEdit, todoUpdate, setTodoEdit }) => {
   const [formValues, setFormValues] = useState(initialFormValues);
   const [error, setError] = useState(null);
   const [successMesage, setSuccessMesage] = useState(null);
+
+  useEffect(() => {
+    if (todoEdit) {
+      setFormValues(todoEdit);
+    } else {
+      setFormValues(initialFormValues);
+    }
+  }, [todoEdit]);
 
   const { title, descripcion } = formValues;
 
@@ -35,18 +43,33 @@ const TodoForm = ({ addTodo }) => {
       }, 2000);
       return;
     }
-    addTodo(formValues);
-    setFormValues(initialFormValues);
-    setSuccessMesage("Tarea agregada con exito");
+    if (todoEdit) {
+      todoUpdate(formValues);
+      setSuccessMesage("Tarea actualizada con exito");
+    } else {
+      addTodo(formValues);
+      setSuccessMesage("Tarea agregada con exito");
+      setFormValues(initialFormValues);
+    }
     setError(null);
     setTimeout(() => {
       setSuccessMesage(null);
     }, 2000);
   };
 
+  const cancelEdit = () => {
+    setFormValues(initialFormValues);
+    setTodoEdit(null);
+  };
+
   return (
     <div className="col-4">
-      <h1>Nueva tarea</h1>
+      <h1>{todoEdit ? "Editar tarea" : "Nueva tarea"}</h1>
+      {todoEdit && (
+        <button onClick={cancelEdit} className="btn btn-warning mb-3">
+          Cancelar edicion
+        </button>
+      )}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <input
@@ -67,7 +90,9 @@ const TodoForm = ({ addTodo }) => {
             onChange={handleChangeInput}
           ></textarea>
         </div>
-        <button className="btn btn-primary btn-block">Agregar tarea</button>
+        <button className="btn btn-primary btn-block">
+          {todoEdit ? "Actualizar tarea" : "Agregar tarea"}
+        </button>
       </form>
       {error && <div className="alert alert-danger mt-2">{error}</div>}
       {successMesage && (

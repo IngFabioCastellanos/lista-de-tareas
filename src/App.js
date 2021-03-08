@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TodoForm from "./components/TodoForm";
 import TodoList from "./components/TodoList";
 
@@ -7,26 +7,32 @@ import "./App.css";
 const initialState = [
   {
     id: 1,
-    title: "Todo #1",
-    descripcion: "desc del todo#1",
+    title: "Todo #1 Ejemplo",
+    descripcion: "descripción de la tarea #1 de ejemplo",
     completed: false,
-  },
-  {
-    id: 2,
-    title: "Todo #2",
-    descripcion: "desc del todo#2",
-    completed: true,
   },
 ];
 
-export default function App() {
-  const [todos, setTodos] = useState(initialState);
+const localTodos = JSON.parse(localStorage.getItem("todos"));
 
+export default function App() {
+  const [todos, setTodos] = useState(localTodos || initialState);
+  const [todoEdit, setTodoEdit] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
+
+  // eliminar tarea
   const todoDelete = (todoId) => {
+    if (todoEdit && todoId === todoEdit.id) {
+      setTodoEdit(null);
+    }
     const changeTodo = todos.filter((todo) => todo.id !== todoId);
     setTodos(changeTodo);
   };
 
+  // Cambiar boton de terminar tarea
   const todoToggleCompleted = (todoId) => {
     const changeTodo = todos.map((todo) =>
       todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
@@ -34,6 +40,14 @@ export default function App() {
     setTodos(changeTodo);
   };
 
+  const todoUpdate = (todoEdit) => {
+    const changeTodo = todos.map((todo) =>
+      todo.id === todoEdit.id ? todoEdit : todo
+    );
+    setTodos(changeTodo);
+  };
+
+  // agregar nueva tarea
   const addTodo = (todo) => {
     const newTodo = {
       ...todo,
@@ -52,8 +66,14 @@ export default function App() {
           todos={todos}
           todoDelete={todoDelete}
           todoToggleCompleted={todoToggleCompleted}
+          setTodoEdit={setTodoEdit}
         />
-        <TodoForm addTodo={addTodo} />
+        <TodoForm
+          addTodo={addTodo}
+          todoEdit={todoEdit}
+          todoUpdate={todoUpdate}
+          setTodoEdit={setTodoEdit}
+        />
       </div>
     </div>
   );
